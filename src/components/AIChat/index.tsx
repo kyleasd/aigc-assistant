@@ -1,27 +1,16 @@
 import { RobotOutlined, SendOutlined, UserOutlined } from "@ant-design/icons";
 import { Bubble } from "@ant-design/x";
 import { Button, Empty, Input, Space, Spin } from "antd";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
+import { Message, useStore } from "../../store/useStore";
 import "./aichat.css";
 
-interface Message {
-  id: string;
-  content: string;
-  role: "user" | "assistant";
-  timestamp: Date;
-}
-
 export default function AIChat() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "0",
-      content: "你好！👋 我是 AI 助手，有什么我可以帮你的吗？",
-      role: "assistant",
-      timestamp: new Date(),
-    },
-  ]);
-  const [inputValue, setInputValue] = useState("");
-  const [loading, setLoading] = useState(false);
+  const messages = useStore((s) => s.messages);
+  const addMessage = useStore((s) => s.addMessage);
+  const setLoading = useStore((s) => s.setLoading);
+  const loading = useStore((s) => s.loading);
+  const [inputValue, setInputValue] = React.useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 自动滚动到最新消息
@@ -62,7 +51,7 @@ export default function AIChat() {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, newUserMessage]);
+    addMessage(newUserMessage);
     setInputValue("");
     setLoading(true);
 
@@ -77,7 +66,7 @@ export default function AIChat() {
         timestamp: new Date(),
       };
 
-      setMessages((prev) => [...prev, newAIMessage]);
+      addMessage(newAIMessage);
     } catch (error) {
       console.error("Error getting AI response:", error);
     } finally {
