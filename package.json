@@ -20,7 +20,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "electron-updater": "^6.3.9"
+    "@ant-design/icons": "^6.1.0",
+    "@ant-design/x": "^2.2.2",
+    "antd": "^6.2.3",
+    "electron-updater": "^6.3.9",
+    "react-router-dom": "^7.13.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.48.2",
