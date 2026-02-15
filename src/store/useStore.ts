@@ -20,7 +20,7 @@ export const useStore = create<State>((set: any) => ({
   messages: [
     {
       id: "0",
-      content: "你好！👋 我是 AI 助手，有什么我可以帮你的吗？",
+      content: "你好！👋 我是 小爱，有什么我可以帮你的吗？",
       role: "assistant",
       timestamp: new Date(),
     },
