@@ -1,12 +1,9 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { message } from 'antd';
 
-// 基础配置
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 // 创建 axios 实例
 const instance = axios.create({
-  baseURL: BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -35,7 +32,7 @@ instance.interceptors.response.use(
   (error) => {
     // 统一错误处理
     let errorMsg = '请求失败';
-    
+
     if (error.response) {
       switch (error.response.status) {
         case 401:

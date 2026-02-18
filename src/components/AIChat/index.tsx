@@ -3,6 +3,7 @@ import { Bubble } from "@ant-design/x";
 import { Button, Empty, Input, Space, Spin } from "antd";
 import React, { useEffect, useRef } from "react";
 import { Message, useStore } from "../../store/useStore";
+// import { chatAPI } from "../../apis/chat";
 import "./aichat.css";
 
 export default function AIChat() {
@@ -22,23 +23,23 @@ export default function AIChat() {
     scrollToBottom();
   }, [messages]);
 
-  // 模拟 AI 回复（实际应用中应替换为真实 API 调用）
-  const simulateAIResponse = (userMessage: string): Promise<string> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const responses = [
-          `我已收到你的消息："${userMessage}"。这是一个演示回复。`,
-          "这是一个很好的问题！我正在处理中...",
-          "我理解了。让我提供一个有用的回复。",
-          "感谢你的提问！我会尽力帮助你。",
-          "这是一个有趣的询问。让我为你分析一下。",
-        ];
-        const randomResponse =
-          responses[Math.floor(Math.random() * responses.length)];
-        resolve(randomResponse);
-      }, 800);
-    });
-  };
+  // 调用 AI API 获取回复
+  // const getAIResponse = async (userMessage: string): Promise<string> => {
+  //   try {
+  //     const response = await chatAPI.getCompletion({
+  //       message: userMessage,
+  //       // 可以根据需要添加更多参数
+  //       // sessionId: 'current-session-id',
+  //       // model: 'gpt-3.5-turbo',
+  //       // temperature: 0.7
+  //     });
+      
+  //     return response.data.reply;
+  //   } catch (error) {
+  //     console.error("AI 请求失败:", error);
+  //     return "抱歉，服务暂时不可用，请稍后再试。";
+  //   }
+  // };
 
   // 发送消息
   const handleSendMessage = async () => {
@@ -56,8 +57,8 @@ export default function AIChat() {
     setLoading(true);
 
     try {
-      // 调用 AI 回复
-      const aiResponse = await simulateAIResponse(inputValue);
+      // 调用 AI API
+      const aiResponse = await getAIResponse(inputValue);
 
       const newAIMessage: Message = {
         id: String(Date.now() + 1),
@@ -68,7 +69,15 @@ export default function AIChat() {
 
       addMessage(newAIMessage);
     } catch (error) {
-      console.error("Error getting AI response:", error);
+      console.error("发送消息失败:", error);
+      // 添加错误提示消息
+      const errorMessage: Message = {
+        id: String(Date.now() + 1),
+        content: "消息发送失败，请检查网络连接后重试。",
+        role: "assistant",
+        timestamp: new Date(),
+      };
+      addMessage(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -85,8 +94,8 @@ export default function AIChat() {
   return (
     <div className="aichat-container">
       <div className="aichat-header">
-        <h1>🤖 AI 对话助手</h1>
-        <p>与 AI 进行实时对话，获取帮助和信息</p>
+        <h1>游戏视频助手</h1>
+        <p>让您的游戏形象抽象化</p>
       </div>
 
       <div className="aichat-messages">
