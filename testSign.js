@@ -7,8 +7,8 @@ import { ECSClient, DescribeZonesCommand } from "@volcengine/ecs"; // 需安装�
 
 // 2. 或者在代码中显式传入 AK/SK
 const client = new ECSClient({
-  accessKeyId: "AKLTM2I3OTljNDI4YTQ3NDcxM2EwZTMwNjU5YTA5NDExNmU",
-  secretAccessKey: "T1RBMk1tSXdaVFprWmpZNU5EWTJaamxqT1RNek9XRmtNV015WkRNNE5HWQ==",
+  accessKeyId: "YOUR_ACCESS_KEY_ID",
+  secretAccessKey: "YOUR_SECRET_ACCESS_KEY",
   region: "cn-north-1",
 });
 
