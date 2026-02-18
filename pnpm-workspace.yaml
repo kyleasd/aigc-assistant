@@ -1,6 +1,0 @@
-ignoredBuiltDependencies:
-  - esbuild
-
-onlyBuiltDependencies:
-  - electron
-  - esbuild
