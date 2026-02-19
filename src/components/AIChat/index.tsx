@@ -94,8 +94,8 @@ export default function AIChat() {
   return (
     <div className="aichat-container">
       <div className="aichat-header">
-        <h1>游戏视频助手</h1>
-        <p>让您的游戏形象抽象化</p>
+        <h1>创意游戏视频助手</h1>
+        <p>让您的创意形象化</p>
       </div>
 
       <div className="aichat-messages">
