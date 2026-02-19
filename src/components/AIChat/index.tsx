@@ -9,11 +9,14 @@ import './aichat.css';
 export default function AIChat() {
   const messages = useStore((s) => s.messages);
   const addMessage = useStore((s) => s.addMessage);
+  const setMessages = useStore((s) => s.setMessages);
   const setLoading = useStore((s) => s.setLoading);
   const loading = useStore((s) => s.loading);
   const [inputValue, setInputValue] = useState('');
   const [taskId, setTaskId] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const taskIdRef = useRef<string>('');
 
   // 自动滚动到最新消息
   const scrollToBottom = () => {
@@ -23,7 +26,21 @@ export default function AIChat() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-  
+
+  // 当 taskId 变化时，更新 taskIdRef
+  useEffect(() => {
+    taskIdRef.current = taskId;
+  }, [taskId]);
+
+  // 组件卸载时清除定时器
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
   // 发送消息
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
@@ -33,6 +50,7 @@ export default function AIChat() {
         id: String(Date.now()),
         content: inputValue,
         role: 'user',
+        isLoading: false,
         timestamp: new Date(),
       };
 
@@ -40,52 +58,60 @@ export default function AIChat() {
       setInputValue('');
       setLoading(true);
       // const res = await videoAPI.submitJimeng3_0Pro1080P(newUserMessage.content);
-      const res = await videoAPI.submitJimeng3_0_1080P(newUserMessage.content);
-      console.log('res', res)
+      // const res = await videoAPI.submitJimeng3_0_1080P(newUserMessage.content);
+      const res = await videoAPI.submitJimeng3_0_720P(newUserMessage.content);
       let content = ''
       if (res.status === 50430) {
         content = '请求太快了，请稍后再试'
       } else if (res.status === 10000) {
         content = res.data?.task_id || ''
         setTaskId(content);
+        // 直接更新 taskIdRef，确保立即反映最新值
+        taskIdRef.current = content;
       }
-      
+
       const newAIMessage: Message = {
         id: String(Date.now() + 1),
-        content: content,
+        content: '',
         role: "assistant",
+        isLoading: true,
         timestamp: new Date(),
       };
 
       addMessage(newAIMessage);
+
+      // 清除之前可能存在的定时器
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      
+      timerRef.current = setInterval(() => {
+        getResult();
+      }, 2000);
     } catch (error) {
-      console.error('发送消息失败:', error);
-      // 添加错误提示消息
-      const errorMessage: Message = {
-        id: String(Date.now() + 1),
-        content: '消息发送失败，请检查网络连接后重试。',
-        role: 'assistant',
-        timestamp: new Date(),
-      };
-      addMessage(errorMessage);
-    } finally {
-      setLoading(false);
+      console.error('handleSendMessage: ', error);
     }
   };
 
   const getResult = async () => {
-    if (!taskId) return;
+    const currentTaskId = taskIdRef.current;
+    if (!currentTaskId) return;
     try {
-      // const res = await videoAPI.getJimeng3_0Pro1080PResult(taskId);
-      const res = await videoAPI.getJimeng3_0_1080PResult(taskId);
-      console.log('getResult:', res);
-      // const newAIMessage: Message = {
-      //   id: String(Date.now() + 1),
-      //   content: await res.text(),
-      //   role: "assistant",
-      //   timestamp: new Date(),
-      // };
-      // addMessage(newAIMessage);
+      // const res = await videoAPI.getJimeng3_0Pro1080PResult(currentTaskId);
+      // const res = await videoAPI.getJimeng3_0_1080PResult(currentTaskId);
+      const res = await videoAPI.getJimeng3_0_720PResult(currentTaskId);
+      if (res.data.status === 'done') {
+        messages[messages.length -1].isLoading = false
+        messages[messages.length -1].content = res.data?.video_url || ''
+        setMessages(messages)
+        console.log('messages', messages)
+
+        // 当任务完成时清除定时器
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      }
     } catch (error) {
       console.error('getResult:', error);
     }
@@ -113,7 +139,11 @@ export default function AIChat() {
           messages.map((msg) => (
             <Bubble
               key={msg.id}
-              content={msg.content}
+              content={msg.role === 'assistant' ? (
+                msg.isLoading ? null : <video src={msg.content} controls></video>
+              ) : msg.content}
+              loading={msg.isLoading}
+              loadingRender={() => <div>生成中</div>}
               placement={msg.role === 'user' ? 'end' : 'start'}
               avatar={
                 <div
@@ -158,25 +188,6 @@ export default function AIChat() {
             allowClear
           />
         </Space.Compact>
-        <Button
-          type="primary"
-          size="large"
-          icon={<SendOutlined />}
-          onClick={handleSendMessage}
-          loading={loading}
-          disabled={!inputValue.trim() || loading}
-          style={{ marginTop: '12px', width: '100%' }}
-        >
-          {loading ? '发送中...' : '发送'}
-        </Button>
-        <Button
-          type="primary"
-          size="large"
-          onClick={getResult}
-          style={{ marginTop: '12px', width: '100%' }}
-        >
-          获取结果
-        </Button>
       </div>
     </div>
   );
