@@ -3,6 +3,7 @@ import { create } from "zustand";
 export interface Message {
   id: string;
   content: string;
+  isLoading: boolean;
   role: "user" | "assistant";
   timestamp: Date;
 }
@@ -22,6 +23,7 @@ export const useStore = create<State>((set: any) => ({
       id: "0",
       content: "你好！👋 我是 小爱，有什么我可以帮你的吗？",
       role: "assistant",
+      isLoading: false,
       timestamp: new Date(),
     },
   ],
