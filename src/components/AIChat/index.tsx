@@ -1,7 +1,7 @@
 import { RobotOutlined, SendOutlined, UserOutlined } from '@ant-design/icons';
 import { Bubble } from '@ant-design/x';
 import { Button, Empty, Input, Space, Spin } from 'antd';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Message, useStore } from '../../store/useStore';
 import { videoAPI } from '@/apis/index';
 import './aichat.css';
@@ -11,7 +11,8 @@ export default function AIChat() {
   const addMessage = useStore((s) => s.addMessage);
   const setLoading = useStore((s) => s.setLoading);
   const loading = useStore((s) => s.loading);
-  const [inputValue, setInputValue] = React.useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [taskId, setTaskId] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 自动滚动到最新消息
@@ -22,25 +23,7 @@ export default function AIChat() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  // 调用 AI API 获取回复
-  // const getAIResponse = async (userMessage: string): Promise<string> => {
-  //   try {
-  //     const response = await chatAPI.getCompletion({
-  //       message: userMessage,
-  //       // 可以根据需要添加更多参数
-  //       // sessionId: 'current-session-id',
-  //       // model: 'gpt-3.5-turbo',
-  //       // temperature: 0.7
-  //     });
-
-  //     return response.data.reply;
-  //   } catch (error) {
-  //     console.error("AI 请求失败:", error);
-  //     return "抱歉，服务暂时不可用，请稍后再试。";
-  //   }
-  // };
-
+  
   // 发送消息
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
@@ -56,18 +39,25 @@ export default function AIChat() {
       addMessage(newUserMessage);
       setInputValue('');
       setLoading(true);
-      const res = await videoAPI.submitJimeng3_0Pro1080P('跳舞的小女孩');
-      // 调用 AI API
-      // const aiResponse = await getAIResponse(inputValue);
+      // const res = await videoAPI.submitJimeng3_0Pro1080P(newUserMessage.content);
+      const res = await videoAPI.submitJimeng3_0_1080P(newUserMessage.content);
+      console.log('res', res)
+      let content = ''
+      if (res.status === 50430) {
+        content = '请求太快了，请稍后再试'
+      } else if (res.status === 10000) {
+        content = res.data?.task_id || ''
+        setTaskId(content);
+      }
+      
+      const newAIMessage: Message = {
+        id: String(Date.now() + 1),
+        content: content,
+        role: "assistant",
+        timestamp: new Date(),
+      };
 
-      // const newAIMessage: Message = {
-      //   id: String(Date.now() + 1),
-      //   content: aiResponse,
-      //   role: "assistant",
-      //   timestamp: new Date(),
-      // };
-
-      // addMessage(newAIMessage);
+      addMessage(newAIMessage);
     } catch (error) {
       console.error('发送消息失败:', error);
       // 添加错误提示消息
@@ -82,6 +72,24 @@ export default function AIChat() {
       setLoading(false);
     }
   };
+
+  const getResult = async () => {
+    if (!taskId) return;
+    try {
+      // const res = await videoAPI.getJimeng3_0Pro1080PResult(taskId);
+      const res = await videoAPI.getJimeng3_0_1080PResult(taskId);
+      console.log('getResult:', res);
+      // const newAIMessage: Message = {
+      //   id: String(Date.now() + 1),
+      //   content: await res.text(),
+      //   role: "assistant",
+      //   timestamp: new Date(),
+      // };
+      // addMessage(newAIMessage);
+    } catch (error) {
+      console.error('getResult:', error);
+    }
+  }
 
   // 按 Enter 发送
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -160,6 +168,14 @@ export default function AIChat() {
           style={{ marginTop: '12px', width: '100%' }}
         >
           {loading ? '发送中...' : '发送'}
+        </Button>
+        <Button
+          type="primary"
+          size="large"
+          onClick={getResult}
+          style={{ marginTop: '12px', width: '100%' }}
+        >
+          获取结果
         </Button>
       </div>
     </div>
