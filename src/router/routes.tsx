@@ -5,16 +5,14 @@ import { PATHS } from "./paths";
 
 const Home = lazy(() => import("@/pages/Home"));
 const AIChat = lazy(() => import("@/pages/AIChat"));
-const SignatureTest = lazy(() => import("@/pages/SignatureTest"));
 
 // Route objects used to render nested routes in router/index.tsx
 export const routeConfig: RouteObject[] = [
   {
     path: PATHS.HOME,
-    element: <MainLayout />,
+    // element: <MainLayout />,
     children: [
       { index: true, element: <Home /> },
-      { path: PATHS.SIGNATURE_TEST, element: <SignatureTest /> },
     ],
   },
 ];
