@@ -138,20 +138,11 @@ export default function AIChat() {
           timerRef.current = null;
         }
       } else if (res.data.status === 'downloading') {
-        // 更新消息内容，显示下载中状态
-        setMessages(prevMessages => {
-          // 确保 prevMessages 是数组
-          if (!Array.isArray(prevMessages)) {
-            console.error('prevMessages is not an array:', prevMessages);
-            return [];
-          }
-          const updatedMessages = [...prevMessages];
-          if (updatedMessages.length > 0) {
-            updatedMessages[updatedMessages.length - 1].content = 'downloading';
-            // 保持加载状态为 true
-          }
-          return updatedMessages;
-        });
+        const updatedMessages = [...messages];
+        if (updatedMessages.length > 0) {
+          updatedMessages[updatedMessages.length - 1].content = 'downloading';
+        }
+        setMessages(updatedMessages);
         // 不清除定时器，继续轮询
       }
     } catch (error) {
@@ -162,19 +153,12 @@ export default function AIChat() {
         timerRef.current = null;
       }
       // 更新消息状态
-      setMessages(prevMessages => {
-        // 确保 prevMessages 是数组
-        if (!Array.isArray(prevMessages)) {
-          console.error('prevMessages is not an array:', prevMessages);
-          return [];
-        }
-        const updatedMessages = [...prevMessages];
-        if (updatedMessages.length > 0) {
-          updatedMessages[updatedMessages.length - 1].isLoading = false;
-          updatedMessages[updatedMessages.length - 1].content = `任务查询异常`;
-        }
-        return updatedMessages;
-      });
+      const updatedMessages = [...messages];
+      if (updatedMessages.length > 0) {
+        updatedMessages[updatedMessages.length - 1].isLoading = false;
+        updatedMessages[updatedMessages.length - 1].content = `任务查询异常`;
+      }
+      setMessages(updatedMessages);
     }
   }
 
