@@ -75,6 +75,10 @@ export default defineConfig(({ command }) => {
       //   })()
       //   : {}),
       proxy: {
+        '/api/v1': {
+          target: 'http://localhost:3001',
+          changeOrigin: true
+        },
         '/jimeng': {
           target: 'https://visual.volcengineapi.com',
           changeOrigin: true,
