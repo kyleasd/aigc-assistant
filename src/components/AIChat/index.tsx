@@ -60,21 +60,28 @@ export default function AIChat() {
       // const res = await videoAPI.submitJimeng3_0Pro1080P(newUserMessage.content);
       // const res = await videoAPI.submitJimeng3_0_1080P(newUserMessage.content);
       const res = await videoAPI.submitJimeng3_0_720P(newUserMessage.content);
+      
+      // 确保 res 是有效的对象
+      if (!res || typeof res !== 'object') {
+        throw new Error('Invalid response from API');
+      }
       let content = ''
+      // 处理后端返回的数据结构
       if (res.status === 50430) {
         content = '请求太快了，请稍后再试'
       } else if (res.status === 10000) {
-        content = res.data?.task_id || ''
-        setTaskId(content);
+        const { task_id } = res.data
+        content = `请求成功，任务ID: ${task_id}`
+        setTaskId(task_id || '');
         // 直接更新 taskIdRef，确保立即反映最新值
-        taskIdRef.current = content;
+        taskIdRef.current = task_id || '';
       }
 
       const newAIMessage: Message = {
         id: String(Date.now() + 1),
-        content: '',
+        content: content,
         role: "assistant",
-        isLoading: true,
+        isLoading: content ? false : true,
         timestamp: new Date(),
       };
 
@@ -85,11 +92,24 @@ export default function AIChat() {
         clearInterval(timerRef.current);
       }
       
-      timerRef.current = setInterval(() => {
-        getResult();
-      }, 2000);
+      // 只有在获取到 taskId 时才设置定时器
+      if (taskIdRef.current) {
+        timerRef.current = setInterval(() => {
+          getResult();
+        }, 2000);
+      }
     } catch (error) {
       console.error('handleSendMessage: ', error);
+      const newAIMessage: Message = {
+        id: String(Date.now() + 1),
+        content: '任务提交失败，请稍后再试',
+        role: "assistant",
+        isLoading: false,
+        timestamp: new Date(),
+      };
+      addMessage(newAIMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -100,20 +120,61 @@ export default function AIChat() {
       // const res = await videoAPI.getJimeng3_0Pro1080PResult(currentTaskId);
       // const res = await videoAPI.getJimeng3_0_1080PResult(currentTaskId);
       const res = await videoAPI.getJimeng3_0_720PResult(currentTaskId);
+      
       if (res.data.status === 'done') {
-        messages[messages.length -1].isLoading = false
-        messages[messages.length -1].content = res.data?.video_url || ''
-        setMessages(messages)
-        console.log('messages', messages)
+        
+        const newMessage: Message = {
+          id: String(Date.now()),
+          content: res.data.local_video_url ?? '',
+          role: 'assistant',
+          isLoading: false,
+          timestamp: new Date()
+        };
+        addMessage(newMessage);
 
         // 当任务完成时清除定时器
         if (timerRef.current) {
           clearInterval(timerRef.current);
           timerRef.current = null;
         }
+      } else if (res.data.status === 'downloading') {
+        // 更新消息内容，显示下载中状态
+        setMessages(prevMessages => {
+          // 确保 prevMessages 是数组
+          if (!Array.isArray(prevMessages)) {
+            console.error('prevMessages is not an array:', prevMessages);
+            return [];
+          }
+          const updatedMessages = [...prevMessages];
+          if (updatedMessages.length > 0) {
+            updatedMessages[updatedMessages.length - 1].content = 'downloading';
+            // 保持加载状态为 true
+          }
+          return updatedMessages;
+        });
+        // 不清除定时器，继续轮询
       }
     } catch (error) {
       console.error('getResult:', error);
+      // 异常时清除定时器
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      // 更新消息状态
+      setMessages(prevMessages => {
+        // 确保 prevMessages 是数组
+        if (!Array.isArray(prevMessages)) {
+          console.error('prevMessages is not an array:', prevMessages);
+          return [];
+        }
+        const updatedMessages = [...prevMessages];
+        if (updatedMessages.length > 0) {
+          updatedMessages[updatedMessages.length - 1].isLoading = false;
+          updatedMessages[updatedMessages.length - 1].content = `任务查询异常`;
+        }
+        return updatedMessages;
+      });
     }
   }
 
@@ -125,6 +186,13 @@ export default function AIChat() {
     }
   };
 
+  const getContent = (msg: Message) => {
+    if (msg.role === 'assistant') {
+      return msg.isLoading ? null : (msg.content.startsWith('/api/v1/jimeng/video/')) ? <video className='video' src={msg.content} controls></video> : msg.content
+    }
+    return msg.content
+  }
+
   return (
     <div className="aichat-container">
       <div className="aichat-header">
@@ -133,17 +201,13 @@ export default function AIChat() {
       </div>
 
       <div className="aichat-messages">
-        {messages.length === 0 ? (
-          <Empty description="暂无消息" />
-        ) : (
+        {
           messages.map((msg) => (
             <Bubble
               key={msg.id}
-              content={msg.role === 'assistant' ? (
-                msg.isLoading ? null : <video src={msg.content} controls></video>
-              ) : msg.content}
+              content={getContent(msg)}
               loading={msg.isLoading}
-              loadingRender={() => <div>生成中</div>}
+              loadingRender={() => <div>{msg.content === 'downloading' ? '下载中' : '生成中'}</div>}
               placement={msg.role === 'user' ? 'end' : 'start'}
               avatar={
                 <div
@@ -166,13 +230,7 @@ export default function AIChat() {
               }}
             />
           ))
-        )}
-        {loading && (
-          <div className="aichat-loading">
-            <Spin size="small" />
-            <span>AI 正在思考中...</span>
-          </div>
-        )}
+        }
         <div ref={messagesEndRef} />
       </div>
 
