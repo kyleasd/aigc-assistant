@@ -45,13 +45,13 @@ if (process.platform === 'linux') {
   describe('[electron-vite-react] e2e tests', async () => {
     test('startup', async () => {
       const title = await page.title()
-      expect(title).eq('Electron + Vite + React')
+      expect(title).eq('小爱创意游戏视频助手')
     })
 
     test('should be home page is load correctly', async () => {
       const h1 = await page.$('h1')
       const title = await h1?.textContent()
-      expect(title).eq('Electron + Vite + React')
+      expect(title).eq('小爱创意游戏视频助手')
     })
 
     test('should be count button can click', async () => {
