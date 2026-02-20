@@ -29,8 +29,18 @@ export const useStore = create<State>((set: any) => ({
   ],
   loading: false,
   addMessage: (m: Message) =>
-    set((state: State) => ({ messages: [...state.messages, m] })),
-  setMessages: (ms: Message[]) => set({ messages: ms }),
+    set((state: State) => {
+      // 确保 state.messages 是数组
+      const currentMessages = Array.isArray(state.messages) ? state.messages : [];
+      return { messages: [...currentMessages, m] };
+    }),
+  setMessages: (ms: Message[]) => {
+    // 确保传入的参数是数组，如果不是则保持当前状态
+    return set((state: State) => {
+      const currentMessages = Array.isArray(state.messages) ? state.messages : [];
+      return { messages: Array.isArray(ms) ? ms : currentMessages };
+    });
+  },
   setLoading: (v: boolean) => set({ loading: v }),
   clearMessages: () => set({ messages: [] }),
 }));
