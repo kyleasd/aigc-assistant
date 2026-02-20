@@ -1,6 +1,6 @@
-import { RobotOutlined, SendOutlined, UserOutlined } from '@ant-design/icons';
+import { RobotOutlined, UserOutlined } from '@ant-design/icons';
 import { Bubble } from '@ant-design/x';
-import { Button, Empty, Input, Space, Spin } from 'antd';
+import { Input, Space } from 'antd';
 import React, { useEffect, useRef, useState } from 'react';
 import { Message, useStore } from '../../store/useStore';
 import { videoAPI } from '@/apis/index';
