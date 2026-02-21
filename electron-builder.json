@@ -5,7 +5,11 @@
   "directories": {
     "output": "release/${version}"
   },
-  "files": ["dist-electron", "dist"],
+  "files": [
+    "dist-electron/**/*",
+    "dist/**/*",
+    "package.json"
+  ],
   "mac": {
     "artifactName": "${productName}_${version}.${ext}",
     "target": ["dmg", "zip"]
