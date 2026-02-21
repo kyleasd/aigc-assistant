@@ -35,7 +35,7 @@ try {
     console.log('electron-builder失败，尝试使用已构建的文件...');
     
     const electronPath = path.join(__dirname, 'node_modules', 'electron', 'dist');
-    const appPath = path.join(releasePath, 'electron-vite-react-win32-x64');
+    const appPath = path.join(releasePath, 'ai-assistant');
     
     if (fs.existsSync(appPath)) {
       console.log(`应用已构建在: ${appPath}`);
